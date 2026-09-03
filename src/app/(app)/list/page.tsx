@@ -23,11 +23,12 @@ export default async function ListPage(props: PageProps<"/list">) {
     typeof sp.to === "string" && isWorkDateString(sp.to) ? sp.to : def.to;
   const memberId =
     typeof sp.member === "string" && sp.member.length > 0 ? sp.member : null;
+  const invalidRange = from > to;
 
-  const [members, rows] = await Promise.all([
-    fetchAllMembers(),
-    fetchAttendanceRange({ from, to, memberId }),
-  ]);
+  const members = await fetchAllMembers();
+  const rows = invalidRange
+    ? []
+    : await fetchAttendanceRange({ from, to, memberId });
   const views = rows.map(describeListRow);
   const totalMinutes = rows.reduce(
     (sum, r) => sum + (workedMinutes(r.clock_in_at, r.clock_out_at) ?? 0),
@@ -41,15 +42,7 @@ export default async function ListPage(props: PageProps<"/list">) {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 px-4 py-8 sm:px-6">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-xl font-bold tracking-tight">勤怠一覧</h1>
-        <Link
-          href="/attendance"
-          className="text-sm text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
-        >
-          勤怠入力へ
-        </Link>
-      </header>
+      <h1 className="text-xl font-bold tracking-tight">勤怠一覧</h1>
 
       <form
         method="GET"
@@ -103,6 +96,15 @@ export default async function ListPage(props: PageProps<"/list">) {
           当月に戻す
         </Link>
       </form>
+
+      {invalidRange && (
+        <p
+          role="alert"
+          className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300"
+        >
+          期間の指定が逆になっています（from が to より後）。from ≤ to にしてください。
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <span className="text-zinc-600 dark:text-zinc-400">

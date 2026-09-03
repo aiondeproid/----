@@ -10,8 +10,8 @@ import {
   deleteAttendanceAction,
   updateAttendanceAction,
   type ActionState,
-} from "./actions";
-import { EditFields } from "./edit-fields";
+} from "@/lib/attendance-actions";
+import { EditFields } from "@/components/edit-fields";
 
 const INITIAL: ActionState = { ok: false, error: null };
 

@@ -9,7 +9,7 @@ import {
   weekdayJa,
 } from "@/lib/time";
 
-import { clockInAction, type ActionState } from "./actions";
+import { clockInAction, type ActionState } from "@/lib/attendance-actions";
 
 const INITIAL: ActionState = { ok: false, error: null };
 

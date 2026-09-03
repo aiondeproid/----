@@ -2,13 +2,13 @@
 
 import { useActionState, useState } from "react";
 
+import { EditFields } from "@/components/edit-fields";
+import type { ListRowView } from "@/lib/attendance-view";
 import {
   deleteAttendanceAction,
   updateAttendanceAction,
   type ActionState,
-} from "@/app/attendance/actions";
-import { EditFields } from "@/app/attendance/edit-fields";
-import type { ListRowView } from "@/lib/attendance-view";
+} from "@/lib/attendance-actions";
 
 const INITIAL: ActionState = { ok: false, error: null };
 
