@@ -35,6 +35,10 @@ export default async function ListPage(props: PageProps<"/list">) {
   );
   const hasOpen = rows.some((r) => r.clock_out_at == null);
 
+  const exportParams = new URLSearchParams({ from, to });
+  if (memberId) exportParams.set("member", memberId);
+  const exportHref = `/api/export?${exportParams.toString()}`;
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 px-4 py-8 sm:px-6">
       <header className="flex items-baseline justify-between">
@@ -100,7 +104,7 @@ export default async function ListPage(props: PageProps<"/list">) {
         </Link>
       </form>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <span className="text-zinc-600 dark:text-zinc-400">
           {from} 〜 {to}
           {memberId
@@ -108,14 +112,22 @@ export default async function ListPage(props: PageProps<"/list">) {
             : "／全員"}
           （{rows.length} 件）
         </span>
-        <span className="tabular-nums">
-          実働 合計 <strong>{formatTotalDuration(totalMinutes)}</strong>
-          {hasOpen && (
-            <span className="ml-1 text-xs text-amber-600 dark:text-amber-500">
-              ※ 退勤待ちを除く
-            </span>
-          )}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="tabular-nums">
+            実働 合計 <strong>{formatTotalDuration(totalMinutes)}</strong>
+            {hasOpen && (
+              <span className="ml-1 text-xs text-amber-600 dark:text-amber-500">
+                ※ 退勤待ちを除く
+              </span>
+            )}
+          </span>
+          <a
+            href={exportHref}
+            className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800"
+          >
+            Excel ダウンロード
+          </a>
+        </div>
       </div>
 
       <AttendanceTable rows={views} />
