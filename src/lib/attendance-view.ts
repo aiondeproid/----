@@ -2,7 +2,7 @@
  * 勤怠行を画面表示用に整形するヘルパー（クライアント・サーバー共用）。
  * 仕様書「6. 時刻の表示ルール」に従う。
  */
-import type { Attendance } from "./types";
+import type { Attendance, AttendanceWithMember } from "./types";
 import {
   formatRowClock,
   formatWorkedDuration,
@@ -42,5 +42,16 @@ export function describeRow(row: Attendance): RowView {
     note: row.note ?? "",
     inInput: toDateTimeInput(row.clock_in_at),
     outInput: row.clock_out_at ? toDateTimeInput(row.clock_out_at) : null,
+  };
+}
+
+/** 勤怠一覧の行（メンバー名付き）。 */
+export type ListRowView = RowView & { memberId: string; memberName: string };
+
+export function describeListRow(row: AttendanceWithMember): ListRowView {
+  return {
+    ...describeRow(row),
+    memberId: row.member.id,
+    memberName: row.member.name,
   };
 }

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAnonServerClient } from "./supabase/server";
-import type { Attendance, Member } from "./types";
+import type { Attendance, AttendanceWithMember, Member } from "./types";
 
 /** アクティブなメンバーを表示順で取得する（勤怠入力の名前選択用）。 */
 export async function fetchActiveMembers(): Promise<Member[]> {
@@ -59,6 +59,45 @@ export async function fetchInputRows(
     .order("clock_in_at", { ascending: true });
   if (error) throw new Error(`勤怠の取得に失敗しました: ${error.message}`);
   return (data ?? []) as Attendance[];
+}
+
+/**
+ * 勤怠一覧・Excel 用。勤務日が [from, to] の範囲にある勤怠を、メンバー情報を
+ * 結合して取得する。並び順は 勤務日 → メンバーの表示順 → 出勤時刻。
+ * memberId を渡すとそのメンバーに絞り込む（アーカイブ済みも表示対象）。
+ */
+export async function fetchAttendanceRange(params: {
+  from: string;
+  to: string;
+  memberId?: string | null;
+}): Promise<AttendanceWithMember[]> {
+  const sb = createAnonServerClient();
+  let query = sb
+    .from("attendance")
+    .select("*, member:members!inner(id, name, sort_order)")
+    .gte("work_date", params.from)
+    .lte("work_date", params.to);
+  if (params.memberId) query = query.eq("member_id", params.memberId);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`勤怠の取得に失敗しました: ${error.message}`);
+
+  const rows = (data ?? []) as unknown as AttendanceWithMember[];
+  rows.sort((a, b) => {
+    if (a.work_date !== b.work_date) return a.work_date < b.work_date ? -1 : 1;
+    if (a.member.sort_order !== b.member.sort_order) {
+      return a.member.sort_order - b.member.sort_order;
+    }
+    if (a.member.name !== b.member.name) {
+      return a.member.name < b.member.name ? -1 : 1;
+    }
+    return a.clock_in_at < b.clock_in_at
+      ? -1
+      : a.clock_in_at > b.clock_in_at
+        ? 1
+        : 0;
+  });
+  return rows;
 }
 
 export async function fetchAttendanceById(id: string): Promise<Attendance | null> {
