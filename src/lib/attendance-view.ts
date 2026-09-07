@@ -22,6 +22,8 @@ export type RowView = {
   /** 実働時間（H:MM）。退勤待ちなら "--:--"。 */
   worked: string;
   isOpen: boolean;
+  /** 出勤の絶対時刻（ISO）。退勤前の経過時間をクライアントで算出するのに使う。 */
+  inAtIso: string;
   note: string;
   /** 編集フォームのプリフィル用。 */
   inInput: DateTimeInput;
@@ -39,6 +41,7 @@ export function describeRow(row: Attendance): RowView {
       : "--:--",
     worked: formatWorkedDuration(row.clock_in_at, row.clock_out_at),
     isOpen: row.clock_out_at == null,
+    inAtIso: new Date(row.clock_in_at).toISOString(),
     note: row.note ?? "",
     inInput: toDateTimeInput(row.clock_in_at),
     outInput: row.clock_out_at ? toDateTimeInput(row.clock_out_at) : null,

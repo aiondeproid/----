@@ -9,8 +9,9 @@ import {
 import { describeRow } from "@/lib/attendance-view";
 import { resolveWorkDate, weekdayJa } from "@/lib/time";
 
-import { ClockInForm } from "./clock-in-form";
+import { ClockPanel } from "./clock-panel";
 import { MemberSelect } from "./member-select";
+import { NowClock } from "./now-clock";
 import { RecordList } from "./record-list";
 
 export const metadata: Metadata = { title: "勤怠入力 | 勤怠管理" };
@@ -29,10 +30,14 @@ export default async function AttendancePage(props: PageProps<"/attendance">) {
   const todayWorkDate = resolveWorkDate(new Date());
   const rows = selected ? await fetchInputRows(selected.id, todayWorkDate) : [];
   const views = rows.map(describeRow);
+  const openViews = views.filter((v) => v.isOpen);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
-      <h1 className="text-xl font-bold tracking-tight">勤怠入力</h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-bold tracking-tight">勤怠入力</h1>
+        <NowClock />
+      </div>
 
       {members.length === 0 ? (
         <p className="rounded-lg border border-dashed border-black/15 px-4 py-8 text-center text-sm text-zinc-500 dark:border-white/20">
@@ -48,10 +53,11 @@ export default async function AttendancePage(props: PageProps<"/attendance">) {
 
           {selected ? (
             <>
-              <ClockInForm
+              <ClockPanel
                 memberId={selected.id}
                 memberName={selected.name}
                 todayWorkDate={todayWorkDate}
+                openRows={openViews}
               />
 
               <section className="flex flex-col gap-2">

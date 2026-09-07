@@ -6,6 +6,8 @@ import {
   workedMinutes,
   formatTotalDuration,
   weekdayJa,
+  formatClockStamp,
+  formatElapsed,
   toDateTimeInput,
   dateTimeInputToIso,
   currentMonthRange,
@@ -115,6 +117,53 @@ describe("weekdayJa", () => {
     expect(weekdayJa("2026-09-03")).toBe("木");
     expect(weekdayJa("2026-09-06")).toBe("日");
     expect(weekdayJa("2026-09-07")).toBe("月");
+  });
+});
+
+describe("formatClockStamp（現在日時の表示）", () => {
+  it("YYYY-MM-DD（曜）HH:mm:ss で返す", () => {
+    expect(formatClockStamp("2026-09-07T09:30:12+09:00")).toBe(
+      "2026-09-07（月）09:30:12",
+    );
+  });
+
+  it("UTC の ISO 入力でも JST で整形する", () => {
+    // 2026-09-06T15:44:05Z == 2026-09-07 00:44:05 JST
+    expect(formatClockStamp("2026-09-06T15:44:05.000Z")).toBe(
+      "2026-09-07（月）00:44:05",
+    );
+  });
+});
+
+describe("formatElapsed（経過時間 / 勤怠時間のライブ表示）", () => {
+  it("H:MM:SS で返す", () => {
+    expect(
+      formatElapsed("2026-09-07T09:00:00+09:00", "2026-09-07T10:23:45+09:00"),
+    ).toBe("1:23:45");
+  });
+
+  it("日をまたいでも通算の経過時間", () => {
+    expect(
+      formatElapsed("2026-09-06T23:00:00+09:00", "2026-09-07T01:30:05+09:00"),
+    ).toBe("2:30:05");
+  });
+
+  it("24 時間を超えても時は桁数制限なし", () => {
+    expect(
+      formatElapsed("2026-09-06T09:00:00+09:00", "2026-09-07T19:00:00+09:00"),
+    ).toBe("34:00:00");
+  });
+
+  it("秒未満は切り捨てる", () => {
+    expect(
+      formatElapsed("2026-09-07T09:00:00.000+09:00", "2026-09-07T09:00:00.900+09:00"),
+    ).toBe("0:00:00");
+  });
+
+  it("負の差（未来の出勤）は 0:00:00 に丸める", () => {
+    expect(
+      formatElapsed("2026-09-07T10:00:00+09:00", "2026-09-07T09:00:00+09:00"),
+    ).toBe("0:00:00");
   });
 });
 

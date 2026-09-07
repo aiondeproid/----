@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 
 import type { RowView } from "@/lib/attendance-view";
-import { nowDateTimeInput } from "@/lib/time";
+import { formatElapsed } from "@/lib/time";
+import { useNow } from "@/lib/use-now";
 
 import {
   clockOutAction,
@@ -12,6 +13,8 @@ import {
   type ActionState,
 } from "@/lib/attendance-actions";
 import { EditFields } from "@/components/edit-fields";
+
+import { ClockOutFields } from "./clock-out-fields";
 
 const INITIAL: ActionState = { ok: false, error: null };
 
@@ -76,7 +79,7 @@ function RecordItem({ row }: { row: RowView }) {
           )}
         </span>
         <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
-          実働 {row.worked}
+          実働 {row.isOpen ? <LiveWorked fromIso={row.inAtIso} /> : row.worked}
         </span>
         {row.note && (
           <span className="text-zinc-500" title={row.note}>
@@ -131,7 +134,7 @@ function RecordItem({ row }: { row: RowView }) {
 
       {mode === "clockout" && (
         <ClockOutFields
-          rowId={row.id}
+          rows={[row]}
           action={outAction}
           pending={outPending}
           error={outState.error}
@@ -152,66 +155,8 @@ function RecordItem({ row }: { row: RowView }) {
   );
 }
 
-function ClockOutFields({
-  rowId,
-  action,
-  pending,
-  error,
-  onCancel,
-}: {
-  rowId: string;
-  action: (formData: FormData) => void;
-  pending: boolean;
-  error: string | null;
-  onCancel: () => void;
-}) {
-  const now = useMemo(() => nowDateTimeInput(), []);
-  return (
-    <form action={action} className="mt-3 flex flex-col gap-2 border-t border-black/10 pt-3 dark:border-white/15">
-      <input type="hidden" name="id" value={rowId} />
-      <div className="flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs font-medium">
-          退勤日
-          <input
-            type="date"
-            name="outDate"
-            defaultValue={now.date}
-            required
-            className="rounded-md border border-black/15 bg-white px-2 py-1.5 text-sm dark:border-white/20 dark:bg-zinc-900"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium">
-          退勤時刻
-          <input
-            type="time"
-            name="outTime"
-            defaultValue={now.time}
-            required
-            className="rounded-md border border-black/15 bg-white px-2 py-1.5 text-sm dark:border-white/20 dark:bg-zinc-900"
-          />
-        </label>
-      </div>
-      {error && (
-        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
-        >
-          {pending ? "保存中…" : "退勤を保存"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-black/15 px-3 py-1.5 text-xs dark:border-white/20"
-        >
-          キャンセル
-        </button>
-      </div>
-    </form>
-  );
+/** 退勤前の行に「出勤からの経過時間」を H:MM:SS でライブ表示する。 */
+function LiveWorked({ fromIso }: { fromIso: string }) {
+  const now = useNow();
+  return <span suppressHydrationWarning>{formatElapsed(fromIso, now)}</span>;
 }

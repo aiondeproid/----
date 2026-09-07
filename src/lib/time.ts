@@ -114,6 +114,30 @@ export function weekdayJa(workDate: string): string {
   return WEEKDAYS_JA[dayjs(workDate).day()];
 }
 
+/**
+ * 現在日時などを画面表示用の `YYYY-MM-DD（曜）HH:mm:ss`（JST）に整形する。
+ * 勤怠入力画面の時計表示に使う。
+ */
+export function formatClockStamp(instant: Instant): string {
+  const jst = toJst(instant);
+  return `${jst.format("YYYY-MM-DD")}（${WEEKDAYS_JA[jst.day()]}）${jst.format("HH:mm:ss")}`;
+}
+
+/**
+ * 経過時間（`to` − `from`）を `H:MM:SS`（時は 0 埋めなし・桁数制限なし）で返す。
+ * 退勤前の「勤怠時間」をライブ表示するのに使う。`from` より前（負値）は `0:00:00`。
+ */
+export function formatElapsed(from: Instant, to: Instant = new Date()): string {
+  const totalSec = Math.max(
+    0,
+    Math.floor((dayjs(to).valueOf() - dayjs(from).valueOf()) / 1000),
+  );
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 /** 日付 + 時刻の入力値。フォームのプリフィル・保存前の組み立てに使う。 */
 export type DateTimeInput = { date: string; time: string };
 
